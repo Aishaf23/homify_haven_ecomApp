@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "769552251632",
+    "project_id": "homify-haven",
+    "storage_bucket": "homify-haven.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769552251632:android:3885fc7a2dde374f93e035",
+        "android_client_info": {
+          "package_name": "com.example.homify_haven"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoXaNBjmn7WxcHYS1vvsHVrQ5qE_fleyI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
