@@ -12,7 +12,20 @@
           "package_name": "com.example.homify_haven"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "769552251632-papqeoro24aeej8kgp3mt459jhtt9tqb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.homify_haven",
+            "certificate_hash": "e846668fc677c51b727cc180feb723b3e6127a97"
+          }
+        },
+        {
+          "client_id": "769552251632-ddegfuenhftj8fg49pljouroottkhmfe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDoXaNBjmn7WxcHYS1vvsHVrQ5qE_fleyI"
@@ -20,7 +33,41 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "769552251632-ddegfuenhftj8fg49pljouroottkhmfe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769552251632:android:0a47945b935621a593e035",
+        "android_client_info": {
+          "package_name": "com.example.homifyhaven"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "769552251632-ddegfuenhftj8fg49pljouroottkhmfe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoXaNBjmn7WxcHYS1vvsHVrQ5qE_fleyI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "769552251632-ddegfuenhftj8fg49pljouroottkhmfe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

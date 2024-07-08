@@ -50,6 +50,21 @@ dependencies:
   lottie: ^3.1.2
   get: ^4.6.6
   flutter_keyboard_visibility: ^6.0.0
+  google_sign_in: ^6.2.1
+  flutter_easyloading: ^3.0.5
+  firebase_messaging: ^14.9.4
+  cached_network_image: ^3.3.1
+  image_card: ^0.0.4
+  connectivity_plus: ^6.0.3
+  fluttertoast: ^8.2.6
+  sizer: ^2.0.15
+  flutter_admin_scaffold: ^1.2.0
+  firebase_storage: ^11.7.7
+  uuid: ^4.4.0
+  intl: ^0.19.0
+  logger: ^2.3.0
+  firebase_app_check: ^0.2.2+7
+  arkit_plugin: ^1.1.0
 
   # animate_gradient: ^0.0.2+1
   
@@ -83,7 +98,7 @@ flutter:
     - images/sofas/
     - images/logos/
     - images/getstarted/
-    - images/mainmenu/
+    - images/c_images/
 
   #   - images/a_dot_ham.jpeg
 

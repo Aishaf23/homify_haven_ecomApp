@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:homify_haven/utils/constants/app_constants.dart';
-import 'package:lottie/lottie.dart';
 
-import 'front_page.dart';
+import 'package:flutter_image_slideshow/flutter_image_slideshow.dart';
+import 'package:get/get.dart';
+import 'package:homify_haven/admin_panel/screens/admin_main.dart';
+import 'package:homify_haven/controller/get_user_data_controller.dart';
+import 'package:homify_haven/user%20panel/screens/auth_screens/login_screen.dart';
+import 'package:homify_haven/user%20panel/bottom_nav_bar/bottom_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,51 +18,192 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    Timer(Duration(seconds: 3), () {
-      Get.offAll(() => FrontScreen());
-    });
+  User? user = FirebaseAuth.instance.currentUser;
+
+  Future<void> loggedIn(BuildContext context) async {
+    if (user != null) {
+      final GetUserDataController getUserDataController =
+          Get.put(GetUserDataController());
+      var userData = await getUserDataController.getUserData(user!.uid);
+
+      // if admin or not
+      if (userData[0]['isAdmin'] == false) {
+        Get.offAll(() => const BottomPage());
+        Get.snackbar(
+          'Welcome Back ${FirebaseAuth.instance.currentUser!.displayName}',
+          "Login Successful",
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: const Color.fromARGB(255, 181, 240, 211),
+          colorText: Colors.black,
+        );
+      } else {
+        Get.offAll(() => const AdminScreen());
+      }
+    }
+    // user null
+    else {
+      Get.to(() => const LoginPage());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    double height = MediaQuery.of(context).size.height;
+    double width = MediaQuery.of(context).size.width;
     return Scaffold(
-      backgroundColor: Color(0xFF981206),
-      body: Container(
-        color: Colors.transparent, // Ensure the container is transparent
-        child: Column(
-          children: [
-            Expanded(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: SizedBox(
+              height: height * 1,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      child: ImageSlideshow(
+                        indicatorColor: Colors.blue,
+                        onPageChanged: (value) {
+                          // debugPrint('Page changed: $value');
+                        },
+                        autoPlayInterval: 2800,
+                        isLoop: true,
+                        children: [
+                          Image.asset(
+                            'images/getstarted/greybed.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                          Image.asset(
+                            'images/getstarted/sofa.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                          Image.asset(
+                            'images/getstarted/outdoornight.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                          Image.asset(
+                            'images/getstarted/flowervase.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                        ],
+                      ),
+                    ), // Replace with your ImageSlideshow
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+              right: 0,
+              // left: 0,
+              top: 500,
               child: Container(
-                width: Get.width,
-                alignment: Alignment.center,
-                color:
-                    Colors.transparent, // Ensure the container is transparent
-                child: Lottie.asset(
-                  'images/splash-icon.json',
+                height: height * 0.5,
+                width: width * 0.9,
+                decoration: const BoxDecoration(
+                    color: Colors.white38,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(500),
+                      bottomLeft: Radius.circular(0),
+                    )),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const SizedBox(
+                        height: 80,
+                      ),
+                      const Align(
+                        alignment: Alignment.topRight,
+                        child: Text(
+                          'Looking for Comfort?',
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(
+                        height: height * 0.0375,
+                      ),
+                      const Text(
+                        'Well! You\'re at the right place. \nWe provide comfort seeking your opinions.',
+                        textDirection: TextDirection.ltr,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                            fontSize: 18,
+                            color: Color.fromARGB(164, 0, 0, 0),
+                            fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(
+                        height: height * 0.05,
+                      ),
+                      Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.black,
+                          ),
+                          onPressed: () {
+                            loggedIn(context);
+                            Get.to(() => const LoginPage());
+                          },
+                          label: const Text("Let's Get Started",
+                              style: TextStyle(
+                                  fontSize: 17,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white60,
+                              maximumSize: Size(width * 2, height * 45)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            Container(
-              width: Get.width,
-              margin: EdgeInsets.only(bottom: 20.0),
-              alignment: Alignment.center,
-              color: Colors.transparent, // Ensure the container is transparent
-              child: Text(
-                AppConstants.appPoweredBy,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
+              )),
+          // Positioned(
+          //   bottom: 6,
+          //   right: 2,
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.end,
+          //     children: [
+          //       Text(
+          //         'Don\'t have an account?',
+          //         style: TextStyle(
+          //           color: Colors.black,
+          //           fontWeight: FontWeight.w500,
+          //         ),
+          //       ),
+          //       TextButton(
+          //           onPressed: () {
+          //             navigateToLoginScreen();
+          //           },
+          //           child: Text(
+          //             'Sign Up',
+          //             style: TextStyle(
+          //                 fontWeight: FontWeight.bold, color: Colors.black),
+          //           ))
+          //     ],
+          //   ),
+          // )
+        ],
       ),
     );
   }
+
+  // navigateToMainMenu() {
+  //   Future.delayed(const Duration(milliseconds: 0), () {
+  //     Navigator.push(context, MaterialPageRoute(builder: (context) {
+  //       return const MainMenu();
+  //     }));
+  //   });
+  // }
+
+  // navigateToLoginScreen() {
+  //   Navigator.push(context, MaterialPageRoute(builder: (context) {
+  //     return LoginPage();
+  //   }));
+  // }
 }
