@@ -1,6 +1,6 @@
 # homify_haven
 
-A new Flutter project.
+Home Furniture & Interior Decor App (Flutter E-commerce App)
 
 ## Getting Started
 
