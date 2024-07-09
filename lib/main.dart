@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:homify_haven/admin_panel/screens/dashboard/add_product.dart';
-import 'package:homify_haven/admin_panel/screens/dashboard/cart_screen.dart';
+// import 'package:homify_haven/admin_panel/screens/dashboard/cart_screen.dart';
 import 'package:homify_haven/admin_panel/screens/dashboard/dashboard.dart';
 import 'package:homify_haven/admin_panel/screens/dashboard/delete_product.dart';
 import 'package:homify_haven/admin_panel/screens/dashboard/update_product.dart';
@@ -67,7 +67,7 @@ class MyApp extends StatelessWidget {
             AddProductScreen.id: (context) => const AddProductScreen(),
             UpdateProductScreen.id: (context) => const UpdateProductScreen(),
             DeleteProductScreen.id: (context) => const DeleteProductScreen(),
-            CartScreen.id: (context) => const CartScreen(),
+            // CartScreen.id: (context) => const CartScreen(),
           },
         );
       },

@@ -328,7 +328,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 padding: const EdgeInsets.all(8.0),
                                 child: Center(
                                     child: Text("$newPrice \$",
-                                        style: const TextStyle(color: Colors.white))),
+                                        style: const TextStyle(
+                                            color: Colors.white))),
                               ),
                             ),
                           ),
@@ -352,20 +353,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       )).whenComplete(() {
                         setState(() {
                           isLoading = false;
-                          Get.snackbar(
-                            'Item Added to Cart',
-                            "Check Cart",
-                            snackPosition: SnackPosition.TOP,
-                            backgroundColor: Colors.amber.shade700,
-                            colorText: const Color(0xfff5f5f5),
-                            duration: const Duration(seconds: 2),
-                          );
+                          Get.snackbar('Item Added to Cart', "Check Cart",
+                              snackPosition: SnackPosition.TOP,
+                              backgroundColor: Colors.amber.shade700,
+                              colorText: Colors.black,
+                              duration: const Duration(seconds: 2),
+                              icon: const Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.black,
+                              ));
                         });
                       });
                     },
                     title: "Add to Cart",
                   ),
-                  
                   const SizedBox(height: 70),
                 ],
               ),

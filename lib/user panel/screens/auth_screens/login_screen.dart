@@ -226,7 +226,7 @@ class _LoginPageState extends State<LoginPage>
                                             );
                                           } else {
                                             Get.offAll(
-                                                () => const BottomPage());
+                                                () =>  const BottomPage());
                                             Get.snackbar(
                                               'Welcome',
                                               "Login Successful",

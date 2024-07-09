@@ -86,22 +86,28 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
           querySnapshot.docs.map((doc) => CartModel.fromDocument(doc)).toList();
 
       if (cartItems.isNotEmpty) {
-        // Prepare the order data
-        Map<String, dynamic> orderData = {
+        // Preparing the order data
+        DateTime orderTime = DateTime.now();
+        DateTime dispatchTime = orderTime.add(const Duration(days: 2));
+        DateTime completeTime = orderTime.add(const Duration(days: 3));
+
+        String initialStatus = 'Pending';
+
+        // Place the order
+        await db.collection('orders').add({
           'name': userName,
           'mobile_number': userPhoneNumber,
           'address': userAddress,
           'city': userCity,
           'email': currentUser!.email,
           'user_id': currentUser!.uid,
-          'status': 'Pending',
-          'time': DateTime.now(),
+          'status': initialStatus, // Make sure 'status' is included
+          'time': orderTime,
+          'dispatch_time': dispatchTime,
+          'complete_time': completeTime,
           'items': cartItems.map((item) => item.toMap()).toList(),
           'totalPrice': widget.totalPrice + shippingFee, // Include shipping fee
-        };
-
-        // Place the order
-        await db.collection('orders').add(orderData);
+        });
 
         // Clear the cart after placing the order
         for (var doc in querySnapshot.docs) {
@@ -130,7 +136,8 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Failed to place order. Please try again.')),
+          content: Text('Failed to place order. Please try again.'),
+        ),
       );
     } finally {
       setState(() {
@@ -162,48 +169,11 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // const Text(
-                    //   'Orders:',
-                    //   style: TextStyle(
-                    //     fontSize: 20,
-                    //     fontWeight: FontWeight.bold,
-                    //   ),
-                    // ),
-                    // SizedBox(
-                    //   height: 80,
-                    //   width: double.infinity,
-                    //   child: Card(
-                    //     child: Center(
-                    //       child: ListTile(
-                    //         leading: ClipRRect(
-                    //           borderRadius:
-                    //               const BorderRadius.all(Radius.circular(12)),
-                    //           child:
-                    //               Image.asset('images/sofas/alseda_blue_2.jpg'),
-                    //         ),
-                    //         title: const Text(
-                    //           'GLOTSTAD',
-                    //           style: TextStyle(
-                    //             fontWeight: FontWeight.bold,
-                    //           ),
-                    //         ),
-                    //         trailing: const Text(
-                    //           '\$ 200.00',
-                    //           style: TextStyle(
-                    //             fontWeight: FontWeight.bold,
-                    //             fontSize: 15,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
-
                     SizedBox(
                       height: height * 0.015,
                     ),
@@ -218,120 +188,30 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       height: height * 0.005,
                     ),
                     SizedBox(
-                      height: height * 0.167,
+                      height: height * 0.25,
                       width: double.infinity,
                       child: Card(
+                        color: Colors.black,
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(16.0),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  RichText(
-                                    text: const TextSpan(
-                                        text: 'Name: ',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                          fontSize: 18,
-                                        )),
-                                  ),
-                                  RichText(
-                                    text: TextSpan(
-                                      text: userName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: height * 0.012,
-                              ),
-                              Row(
-                                children: [
-                                  RichText(
-                                    text: const TextSpan(
-                                        text: 'Contact: ',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                          fontSize: 18,
-                                        )),
-                                  ),
-                                  RichText(
-                                    text: TextSpan(
-                                        text: userPhoneNumber,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                          fontSize: 18,
-                                        )),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: height * 0.012,
-                              ),
-                              Row(
-                                children: [
-                                  RichText(
-                                    text: const TextSpan(
-                                        text: 'Address: ',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                          fontSize: 18,
-                                        )),
-                                  ),
-                                  RichText(
-                                    text: TextSpan(
-                                      text: userAddress,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: height * 0.012,
-                              ),
-                              Row(
-                                children: [
-                                  RichText(
-                                    text: const TextSpan(
-                                        text: 'City: ',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                          fontSize: 18,
-                                        )),
-                                  ),
-                                  RichText(
-                                    text: TextSpan(
-                                      text: userCity,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              _buildDetailRow('Name:', userName),
+                              _buildDetailRow('Contact:', userPhoneNumber),
+                              _buildDetailRow('Address:', userAddress),
+                              _buildDetailRow('City:', userCity),
                             ],
                           ),
                         ),
                       ),
                     ),
                     SizedBox(
-                      height: height * 0.015,
+                      height: height * 0.04,
                     ),
                     const Text(
                       'Payment Method',
@@ -410,7 +290,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       ),
                     ),
                     SizedBox(
-                      height: height * 0.1,
+                      height: height * 0.09,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -475,4 +355,34 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
       ),
     );
   }
+}
+
+Widget _buildDetailRow(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w400,
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.lightBlueAccent,
+              fontSize: 18,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

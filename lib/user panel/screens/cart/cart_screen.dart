@@ -21,14 +21,18 @@ class CartScreen extends StatelessWidget {
   CollectionReference db = FirebaseFirestore.instance.collection('cart');
 
   delete(String id, BuildContext context) {
-    db.doc(id).delete().then((value) => Get.snackbar(
-          'Item Deleted Successfully',
-          "",
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red.shade400,
-          colorText: const Color(0xfff5f5f5),
-          duration: const Duration(seconds: 2),
-        ));
+    db
+        .doc(id)
+        .delete()
+        .then((value) => Get.snackbar('Item Deleted Successfully', "",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.red.shade400,
+            colorText: const Color(0xfff5f5f5),
+            duration: const Duration(seconds: 2),
+            icon: const Icon(
+              Icons.delete,
+              color: Colors.white,
+            )));
   }
 
   TextEditingController nameController = TextEditingController();
