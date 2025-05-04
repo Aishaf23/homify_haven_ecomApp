@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 import 'package:sizer/sizer.dart';
@@ -14,6 +13,7 @@ import 'package:homify_haven/widgets/homi_button.dart';
 
 import '../../../model/category_model.dart';
 import '../../../widgets/homi_textfield.dart';
+import '../../../widgets/snackbar_widget.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -291,15 +291,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       imageUrls.clear();
       clearField();
 
-      Fluttertoast.showToast(
-        msg: "Product added successfully",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 2,
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
+      SnackbarService.showSuccess(context, "Product added successfully!");
     });
     // await FirebaseFirestore.instance.collection('items').add({
     //   "images": imageUrls,

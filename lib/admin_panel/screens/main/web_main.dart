@@ -2,10 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart%20';
 import 'package:flutter/material.dart';
 import 'package:flutter_admin_scaffold/admin_scaffold.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:homify_haven/admin_panel/screens/admin_main.dart';
 
+import '../../../widgets/snackbar_widget.dart';
 import '../dashboard/add_product.dart';
 import '../dashboard/dashboard.dart';
 import '../dashboard/delete_product.dart';
@@ -212,15 +212,7 @@ class _WebMainScreenState extends State<WebMainScreen> {
                   ),
                 );
 
-                Fluttertoast.showToast(
-                  msg: "Admin has Signed Out",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  timeInSecForIosWeb: 2,
-                  backgroundColor: const Color.fromARGB(255, 5, 196, 202),
-                  textColor: Colors.white,
-                  fontSize: 16.0,
-                );
+                SnackbarService.showInfo(context, "Admin has Signed Out");
               },
               child: const Text(
                 "Logout",

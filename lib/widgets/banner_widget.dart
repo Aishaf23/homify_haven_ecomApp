@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_slideshow/flutter_image_slideshow.dart';
 import 'package:get/get.dart';
 
 import '../controller/banner_controller.dart';
@@ -14,7 +14,6 @@ class BannerWidget extends StatefulWidget {
 }
 
 class _BannerWidgetState extends State<BannerWidget> {
-  final CarouselController carouselController = CarouselController();
   final BannerController _bannerController = Get.put(BannerController());
 
   @override
@@ -27,14 +26,21 @@ class _BannerWidgetState extends State<BannerWidget> {
         if (_bannerController.bannerUrls.isEmpty) {
           return const Center(child: CupertinoActivityIndicator());
         } else {
-          return CarouselSlider(
-            items: _bannerController.bannerUrls
-                .asMap()
-                .entries
-                .map(
-                  (entry) => ClipRRect(
-                    borderRadius: BorderRadius.circular(12.0),
-                    child: CachedNetworkImage(
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(12.0),
+            child: ImageSlideshow(
+              width: double.infinity,
+              height: Get.width / 1.45,
+              initialPage: 0,
+              indicatorColor: Colors.blue,
+              indicatorBackgroundColor: Colors.grey,
+              autoPlayInterval: 3000,
+              isLoop: true,
+              children: _bannerController.bannerUrls
+                  .asMap()
+                  .entries
+                  .map(
+                    (entry) => CachedNetworkImage(
                       imageUrl: entry.value,
                       fit: entry.key < 2 ? BoxFit.cover : BoxFit.fill,
                       width: Get.width - 2,
@@ -44,16 +50,11 @@ class _BannerWidgetState extends State<BannerWidget> {
                           child: CupertinoActivityIndicator(),
                         ),
                       ),
-                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
                     ),
-                  ),
-                )
-                .toList(),
-            options: CarouselOptions(
-              scrollDirection: Axis.horizontal,
-              autoPlay: true,
-              aspectRatio: 1.45,
-              viewportFraction: 1,
+                  )
+                  .toList(),
             ),
           );
         }

@@ -42,6 +42,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.grey.shade200,
         appBar: PreferredSize(
             preferredSize: Size.fromHeight(7.h),
             child: Header(
@@ -65,7 +66,7 @@ class CartScreen extends StatelessWidget {
               double totalPrice = 0;
               // ignore: avoid_function_literals_in_foreach_calls
               snapshot.data!.docs.forEach((doc) {
-                totalPrice += doc['price'] * doc['quantity'];
+                totalPrice += doc['price'];
               });
               return totalPrice;
             }
@@ -100,7 +101,8 @@ class CartScreen extends StatelessWidget {
                       itemBuilder: (BuildContext context, int index) {
                         final res = snapshot.data!.docs[index];
                         return Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           child: Container(
                             padding: const EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
@@ -110,7 +112,7 @@ class CartScreen extends StatelessWidget {
                                   BoxShadow(
                                       color: Colors.grey.withOpacity(0.4),
                                       blurRadius: 3,
-                                      spreadRadius: 3,
+                                      spreadRadius: 1,
                                       offset: const Offset(3, 3)),
                                 ]),
                             child: Row(

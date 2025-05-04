@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:homify_haven/admin_panel/screens/dashboard/update_complete.dart';
 import 'package:homify_haven/model/products.dart';
+
+import '../../../widgets/snackbar_widget.dart';
 
 class UpdateProductScreen extends StatelessWidget {
   const UpdateProductScreen({super.key});
@@ -135,27 +136,10 @@ class UpdateProductScreen extends StatelessWidget {
                                                                         .id);
                                                                 Navigator.pop(
                                                                     context);
-
-                                                                Fluttertoast
-                                                                    .showToast(
-                                                                  msg:
-                                                                      "Product deleted successfully",
-                                                                  toastLength: Toast
-                                                                      .LENGTH_SHORT,
-                                                                  gravity:
-                                                                      ToastGravity
-                                                                          .BOTTOM,
-                                                                  timeInSecForIosWeb:
-                                                                      2,
-                                                                  backgroundColor:
-                                                                      Colors
-                                                                          .green,
-                                                                  textColor:
-                                                                      Colors
-                                                                          .white,
-                                                                  fontSize:
-                                                                      16.0,
-                                                                );
+                                                                SnackbarService
+                                                                    .showSuccess(
+                                                                        context,
+                                                                        "Product deleted successfully!");
                                                               },
                                                               child: const Text(
                                                                 'YES',

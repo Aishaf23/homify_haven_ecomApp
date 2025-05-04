@@ -1,9 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:homify_haven/services/firebase_services.dart';
 import 'package:homify_haven/admin_panel/screens/main/web_main.dart';
 import 'package:sizer/sizer.dart';
+
+import '../../widgets/snackbar_widget.dart';
 
 class AdminScreen extends StatefulWidget {
   static const String id = "adminMain";
@@ -38,21 +39,22 @@ class _AdminScreenState extends State<AdminScreen> {
           UserCredential user = await FirebaseAuth.instance.signInAnonymously();
           // ignore: unnecessary_null_comparison
           if (user != null) {
-            Fluttertoast.showToast(msg: "Admin signed in successfully");
+            SnackbarService.showSuccess(
+                context, "Admin signed in successfully");
 
             // Navigate to the admin panel or dashboard
             // ignore: use_build_context_synchronously
             Navigator.pushReplacementNamed(context, WebMainScreen.id);
           }
         } else {
-          Fluttertoast.showToast(msg: "Invalid username or password");
+          SnackbarService.showError(context, "Invalid username or password");
 
           setState(() {
             formStateLoading = false;
           });
         }
       } catch (error) {
-        Fluttertoast.showToast(msg: "Error signing in: $error");
+        SnackbarService.showError(context, "Error signing in: $error");
       } finally {
         setState(() {
           formStateLoading = false;
