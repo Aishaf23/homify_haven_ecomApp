@@ -81,7 +81,12 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
 
     try {
       // Fetch cart items from the database
-      QuerySnapshot querySnapshot = await db.collection('cart').get();
+      QuerySnapshot querySnapshot = await db
+          .collection('cart')
+          .doc(currentUser!.uid)
+          .collection('cartItems')
+          .get();
+
       List<CartModel> cartItems =
           querySnapshot.docs.map((doc) => CartModel.fromDocument(doc)).toList();
 
@@ -103,10 +108,21 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
           'user_id': currentUser!.uid,
           'status': initialStatus, // Make sure 'status' is included
           'time': orderTime,
+          'payment_method': paymentCurrentOption,
           'dispatch_time': dispatchTime,
           'complete_time': completeTime,
-          'items': cartItems.map((item) => item.toMap()).toList(),
-          'totalPrice': widget.totalPrice + shippingFee, // Include shipping fee
+          'items': cartItems.map((item) {
+            // Ensure productId is passed when creating the order
+            return {
+              'productId': item.productId,
+              'productName': item.productName,
+              'image': item.image,
+              'quantity': item.quantity,
+              'price': item.price,
+              'discountPrice': item.discountPrice,
+            };
+          }).toList(),
+          'totalPrice': widget.totalPrice + shippingFee,
         });
 
         // Clear the cart after placing the order
@@ -188,7 +204,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       height: height * 0.005,
                     ),
                     SizedBox(
-                      height: height * 0.25,
+                      height: height * 0.26,
                       width: double.infinity,
                       child: Card(
                         color: Colors.black,

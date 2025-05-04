@@ -1,15 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:homify_haven/model/cart_model.dart';
+
 import 'package:readmore/readmore.dart';
 import 'package:sizer/sizer.dart';
+
 import '../../../model/products.dart';
 import '../../../widgets/homi_button.dart';
 import '../../../widgets/header.dart';
-import '../../../widgets/snackbar_widget.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String? id;
@@ -20,303 +22,396 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  Product? product;
+  List<Product> allProducts = [];
   int count = 1;
-  int newPrice = 0;
-  int selectedIndex = 0;
+  var newPrice = 0;
+
   bool isLoading = false;
+  bool isfvrt = false;
+
+  int selectedIndex = 0;
+
+  getData() async {
+    await FirebaseFirestore.instance
+        .collection("items")
+        .get()
+        .then((QuerySnapshot? snapshot) {
+      snapshot!.docs
+          .where((element) => element["id"] == widget.id)
+          .forEach((e) {
+        if (e.exists) {
+          for (var item in e["imagesUrls"]) {
+            if (item.isNotEmpty) {
+              setState(() {
+                allProducts.add(
+                  Product(
+                    id: e["id"],
+                    detail: e["detail"],
+                    productName: e["productName"],
+                    description: e['description'],
+                    imagesUrls: e["imagesUrls"],
+                    price: e['price'],
+                    discountPrice: e['discountPrice'] ?? 0,
+                  ),
+                );
+              });
+            }
+          }
+        }
+        newPrice = allProducts.first.price!;
+      });
+    });
+    // print(allProducts[0].discountPrice);
+  }
+
+  addToFavourite() async {
+    CollectionReference collectionReference =
+        FirebaseFirestore.instance.collection('favourite');
+    await collectionReference
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection("favItems")
+        .add({"pid": allProducts.first.id});
+    if (kDebugMode) {
+      print('Added to Favorite');
+    }
+  }
+
+  removeToFavrourite(String id) async {
+    CollectionReference collectionReference =
+        FirebaseFirestore.instance.collection('favourite');
+    await collectionReference
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection("favItems")
+        .doc(id)
+        .delete();
+    if (kDebugMode) {
+      print('Removed from Favorite');
+    }
+  }
+
+  int calculatePrice(int quantity) {
+    if (quantity > 3 && allProducts.first.discountPrice != 0) {
+      return quantity * allProducts.first.discountPrice!;
+    } else {
+      return quantity * allProducts.first.price!;
+    }
+  }
+
+  Future<void> addToCart(CartModel item) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final cartCollection = FirebaseFirestore.instance
+        .collection('cart')
+        .doc(uid)
+        .collection('items');
+
+    final existing =
+        await cartCollection.where('id', isEqualTo: item.id).limit(1).get();
+
+    if (existing.docs.isNotEmpty) {
+      final existingDoc = existing.docs.first;
+      final existingData = existingDoc.data();
+      final newQuantity = existingData['quantity'] + item.quantity;
+      final newPrice = calculatePrice(newQuantity);
+
+      await cartCollection.doc(existingDoc.id).update({
+        'quantity': newQuantity,
+        'price': newPrice,
+      });
+    } else {
+      await cartCollection.add({
+        'id': item.id,
+        'productId': item.id,
+        'name': item.productName,
+        'image': item.image,
+        'quantity': item.quantity,
+        'price': calculatePrice(item.quantity!.toInt()),
+      });
+    }
+  }
 
   @override
   void initState() {
+    getData();
     super.initState();
-    getProductData();
-  }
-
-  Future<void> getProductData() async {
-    final query = await FirebaseFirestore.instance
-        .collection("items")
-        .where("id", isEqualTo: widget.id)
-        .limit(1)
-        .get();
-
-    if (query.docs.isNotEmpty) {
-      final data = query.docs.first.data();
-      setState(() {
-        product = Product(
-          id: data["id"],
-          detail: data["detail"],
-          productName: data["productName"],
-          description: data['description'],
-          imagesUrls: List<String>.from(data["imagesUrls"]),
-          price: data['price'],
-          discountPrice: data['discountPrice'],
-        );
-        newPrice = product!.price!;
-      });
-    }
-  }
-
-  void updatePrice() {
-    if (count > 3) {
-      newPrice = count * (product!.discountPrice ?? product!.price!);
-    } else {
-      newPrice = count * product!.price!;
-    }
-  }
-
-  Future<void> toggleFavourite(bool isFav, String? favId) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final favRef = FirebaseFirestore.instance
-        .collection('favourite')
-        .doc(uid)
-        .collection('favItems');
-
-    if (isFav && favId != null) {
-      await favRef.doc(favId).delete();
-    } else {
-      await favRef.add({"pid": product!.id});
-    }
-  }
-
-  Future<void> addToCart() async {
-    setState(() => isLoading = true);
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final cartRef = FirebaseFirestore.instance
-        .collection('cart')
-        .doc(uid)
-        .collection('cartItems');
-    final productId = product!.id;
-
-    final docRef = cartRef.doc(productId);
-    final docSnapshot = await docRef.get();
-
-    final unitPrice = product!.price!;
-    final discountPrice = product!.discountPrice ?? unitPrice;
-
-    if (docSnapshot.exists) {
-      // Product already in cart, update quantity & price
-      final existingQty = docSnapshot['quantity'] ?? 0;
-      final newQty = existingQty + count;
-      final updatedPrice =
-          newQty > 3 ? newQty * discountPrice : newQty * unitPrice;
-
-      await docRef.update({
-        'quantity': newQty,
-        'price': updatedPrice,
-      });
-
-      SnackbarService.showAdded(context, "Item quantity updated in Cart");
-    } else {
-      // Product not in cart, add new entry
-      final newItem = CartModel(
-        id: productId,
-        image: product!.imagesUrls!.first,
-        name: product!.productName,
-        quantity: count,
-        price: newPrice,
-      );
-
-      await cartRef.doc(productId).set(newItem.toMap());
-
-      SnackbarService.showAdded(context, "Item added to Cart");
-    }
-
-    if (mounted) setState(() => isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (product == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(5.h),
-        child: Header(title: product!.productName ?? ""),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Image.network(
-              product!.imagesUrls![selectedIndex],
-              height: 32.5.h,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-            SizedBox(
-              height: 10.h,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: product!.imagesUrls!.length,
-                itemBuilder: (context, index) {
-                  return InkWell(
-                    onTap: () => setState(() => selectedIndex = index),
-                    child: Container(
-                      margin: const EdgeInsets.all(8),
-                      width: 25.w,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black),
-                      ),
-                      child: Image.network(
-                        product!.imagesUrls![index],
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Container(
-              height: 6.h,
-              width: 35.w,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Center(
-                child: Text(
-                  "${product!.price} \$",
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('favourite')
-                  .doc(FirebaseAuth.instance.currentUser!.uid)
-                  .collection('favItems')
-                  .where('pid', isEqualTo: product!.id)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                final isFav = snapshot.data?.docs.isNotEmpty ?? false;
-                final favId = isFav ? snapshot.data!.docs.first.id : null;
-
-                return IconButton(
-                  onPressed: () => toggleFavourite(isFav, favId),
-                  icon: Icon(
-                    Icons.favorite,
-                    color: isFav ? Colors.red : Colors.black,
-                  ),
-                );
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: ReadMoreText(
-                  product!.detail!,
-                  textAlign: TextAlign.justify,
-                  trimLines: 5,
-                  colorClickableText: Colors.pink,
-                  trimMode: TrimMode.Line,
-                  trimCollapsedText: 'Show more',
-                  trimExpandedText: ' Show less',
-                  moreStyle: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold),
-                  lessStyle: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    const TextSpan(
-                      text: "NOTE: ",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    TextSpan(
-                      text:
-                          "Discount of ${product!.discountPrice}\$ will be applied when you order more than three items of this product.",
-                      style: const TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return allProducts.isEmpty
+        ? const Center(child: CircularProgressIndicator())
+        : Scaffold(
+            appBar: PreferredSize(
+                preferredSize: Size.fromHeight(5.h),
+                child: Header(
+                  title: "${allProducts.first.productName}",
+                )),
+            body: SingleChildScrollView(
+              child: Column(
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          if (count > 1) {
-                            setState(() {
-                              count--;
-                              updatePrice();
-                            });
-                          }
-                        },
-                        icon: CircleAvatar(
-                          backgroundColor: Colors.grey.shade300,
-                          radius: 14,
-                          child: const Icon(Icons.exposure_minus_1, size: 20),
-                        ),
-                      ),
-                      Text('$count', style: TextStyle(fontSize: 16.sp)),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            count++;
-                            updatePrice();
-                          });
-                        },
-                        icon: CircleAvatar(
-                          backgroundColor: Colors.grey.shade300,
-                          radius: 14,
-                          child: const Icon(Icons.exposure_plus_1, size: 20),
-                        ),
-                      ),
-                    ],
+                  Image.network(
+                    allProducts[0].imagesUrls![selectedIndex],
+                    height: 32.5.h,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
-                  Container(
-                    height: 6.h,
-                    width: 35.w,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(1),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "$newPrice \$",
-                        style: const TextStyle(color: Colors.white),
-                      ),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ...List.generate(
+                          allProducts[0].imagesUrls!.length,
+                          (index) => InkWell(
+                            onTap: () {
+                              setState(() {
+                                selectedIndex = index;
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Container(
+                                height: 10.h,
+                                width: 25.w,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.black),
+                                ),
+                                child: Image.network(
+                                  allProducts[0].imagesUrls![index],
+                                  height: 9.h,
+                                  width: 9.w,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                   ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      height: 6.h,
+                      width: 35.w,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Center(
+                          child: Text(
+                            "${allProducts.first.price} \$",
+                            style: const TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection('favourite')
+                          .doc(FirebaseAuth.instance.currentUser!.uid)
+                          .collection('favItems')
+                          .where('pid', isEqualTo: allProducts.first.id)
+                          .snapshots(),
+                      builder:
+                          (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                        if (snapshot.data == null) {
+                          return const Text("");
+                        }
+                        return IconButton(
+                            onPressed: () {
+                              snapshot.data!.docs.isEmpty
+                                  ? addToFavourite()
+                                  : removeToFavrourite(
+                                      snapshot.data!.docs.first.id);
+                            },
+                            icon: Icon(
+                              Icons.favorite,
+                              color: snapshot.data!.docs.isEmpty
+                                  ? Colors.black
+                                  : Colors.red,
+                            ));
+                      }),
+                  SizedBox(
+                    height: 0.05.h,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      constraints: BoxConstraints(
+                        minWidth: double.infinity,
+                        minHeight: 14.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
+                      child: ReadMoreText(
+                        allProducts.first.detail!,
+                        textAlign: TextAlign.justify,
+                        trimLines: 5,
+                        colorClickableText: Colors.pink,
+                        trimMode: TrimMode.Line,
+                        trimCollapsedText: 'Show more',
+                        trimExpandedText: ' Show less',
+                        moreStyle: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                        lessStyle: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 1.h,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          const TextSpan(
+                            text: "NOTE: ",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          TextSpan(
+                            text:
+                                "Discount of ${allProducts.first.discountPrice}\$ will be applied when you order more then three items of this product",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    // ignore: avoid_unnecessary_containers
+                    child: Container(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    if (count > 1) count--;
+                                    newPrice = calculatePrice(count);
+                                  });
+                                },
+                                icon: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.black, width: 0.5),
+                                  ),
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.grey.shade300,
+                                    radius: 14,
+                                    child: const Icon(Icons.exposure_minus_1,
+                                        size: 20),
+                                  ),
+                                ),
+                              ),
+                              Text('$count', style: TextStyle(fontSize: 16.sp)),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    count++;
+                                    newPrice = calculatePrice(count);
+                                  });
+                                },
+                                icon: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.black, width: 0.5),
+                                  ),
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.grey.shade300,
+                                    radius: 14,
+                                    child: const Icon(Icons.exposure_plus_1,
+                                        size: 20),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Align(
+                            alignment: Alignment.center,
+                            child: Container(
+                              height: 6.h,
+                              width: 35.w,
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(1),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Center(
+                                    child: Text("$newPrice \$",
+                                        style: const TextStyle(
+                                            color: Colors.white))),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  HomifyButton(
+                    isLoginButton: true,
+                    isLoading: isLoading,
+                    onPress: () {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      CartModel.addOrUpdateCartItem(CartModel(
+                        id: allProducts.first.id,
+                        productId: allProducts.first.id,
+                        image: allProducts.first.imagesUrls!.first,
+                        productName: allProducts.first.productName,
+                        quantity: count,
+                        price: newPrice ?? 0,
+                      )).whenComplete(() {
+                        setState(() {
+                          isLoading = false;
+                          Get.snackbar(
+                            count > 1 ? 'Cart Updated' : 'Item Added to Cart',
+                            "Check Cart",
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.amber.shade700,
+                            colorText: Colors.black,
+                            duration: const Duration(seconds: 2),
+                            icon: const Icon(Icons.shopping_bag_outlined,
+                                color: Colors.black),
+                          );
+                        });
+                      });
+                    },
+                    title: "Add to Cart",
+                  ),
+                  const SizedBox(height: 70),
                 ],
               ),
             ),
-            HomifyButton(
-              isLoginButton: true,
-              isLoading: isLoading,
-              onPress: addToCart,
-              title: "Add to Cart",
-            ),
-            const SizedBox(height: 70),
-          ],
-        ),
-      ),
-    );
+          );
   }
 }

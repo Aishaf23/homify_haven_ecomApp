@@ -8,6 +8,7 @@ import 'package:homify_haven/user%20panel/screens/cart/check_out_screen.dart';
 import 'package:homify_haven/user%20panel/screens/settings/screens/profile_screen.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../../model/cart_model.dart';
 import '../../../model/products.dart';
 import '../../../widgets/homi_button.dart';
 
@@ -41,6 +42,10 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Center(child: Text('Please sign in to view your cart'));
+    }
     return Scaffold(
         backgroundColor: Colors.grey.shade200,
         appBar: PreferredSize(
@@ -49,11 +54,19 @@ class CartScreen extends StatelessWidget {
               title: "CART ITEMS",
             )),
         body: StreamBuilder(
-          stream: FirebaseFirestore.instance.collection('cart').snapshots(),
+          stream: FirebaseFirestore.instance
+              .collection('cart')
+              .doc(user.uid)
+              .collection('cartItems')
+              .snapshots(),
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
             }
 
             // Calculate total price
@@ -100,6 +113,7 @@ class CartScreen extends StatelessWidget {
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (BuildContext context, int index) {
                         final res = snapshot.data!.docs[index];
+
                         return Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
@@ -171,23 +185,43 @@ class CartScreen extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                InkWell(
-                                  onTap: () {
-                                    delete(res.id, context);
-                                    if (kDebugMode) {
-                                      print(
-                                          'User has removed an item from cart');
-                                    }
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        backgroundColor: Colors.white,
+                                        title: const Text('Remove Item'),
+                                        content: const Text(
+                                            'Do you want to remove this item from the cart?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(context)
+                                                    .pop(), // Cancel
+                                            child: const Text(
+                                              'NO',
+                                              style:
+                                                  TextStyle(color: Colors.blue),
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              CartModel.removeFromCart(res.id);
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text(
+                                              'YES',
+                                              style:
+                                                  TextStyle(color: Colors.red),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
                                   },
-                                  child: const CircleAvatar(
-                                    radius: 10,
-                                    backgroundColor: Colors.red,
-                                    child: Icon(
-                                      Icons.remove,
-                                      size: 10,
-                                      color: Colors.white,
-                                    ),
-                                  ),
                                 ),
                               ],
                             ),
@@ -259,8 +293,7 @@ class CartScreen extends StatelessWidget {
                                       Get.to(() => const ProfileScreen());
                                     } else {
                                       Get.to(() => CheckOutScreen(
-                                            cartProducts:
-                                                allProducts, // Pass your list of cart products here
+                                            cartProducts: allProducts,
                                             totalPrice: calculateTotalPrice(),
                                           ));
                                     }

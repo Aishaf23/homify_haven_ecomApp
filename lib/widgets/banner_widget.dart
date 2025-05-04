@@ -30,7 +30,7 @@ class _BannerWidgetState extends State<BannerWidget> {
             borderRadius: BorderRadius.circular(12.0),
             child: ImageSlideshow(
               width: double.infinity,
-              height: Get.width / 1.45,
+              height: Get.width / 1.575,
               initialPage: 0,
               indicatorColor: Colors.blue,
               indicatorBackgroundColor: Colors.grey,
